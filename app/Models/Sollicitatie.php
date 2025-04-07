@@ -36,14 +36,16 @@ class Sollicitatie {
             // Valideer het CV bestand
             $uploadResult = $this->uploadCV($cvFile);
             
-            if (is_string($uploadResult)) {
-                // Er is een fout opgetreden bij het uploaden
+            // Bekijk of de uploadResult variable een path teruggeeft of een foutmelding
+            if (is_string($uploadResult) && strpos($uploadResult, 'uploads/cv/') !== 0) {
+                // Het is een foutmelding, geen geldig pad
+                error_log('Upload error: ' . $uploadResult);
                 return $uploadResult;
             }
             
+            // Als de uploadResult een path teruggeeft, sla deze op in de database
             $cvPath = $uploadResult;
             
-            // Sla de sollicitatie op in de database
             $sql = "INSERT INTO sollicitaties (vacature_id, naam, email, cv_path, motivatie) 
                     VALUES (?, ?, ?, ?, ?)";
                     
@@ -57,7 +59,8 @@ class Sollicitatie {
             
             return true;
         } catch (Exception $e) {
-            return "Er is een fout opgetreden: " . $e->getMessage();
+            error_log('Database error: ' . $e->getMessage());
+            return "Er is een fout opgetreden bij het opslaan van de sollicitatie.";
         }
     }
     
@@ -70,21 +73,35 @@ class Sollicitatie {
      * @author: Chris van Steenbergen
      */
     private function uploadCV($file) {
+        // Debug logging
+        error_log('Upload CV Debug:');
+        error_log('File array contents: ' . print_r($file, true));
+        error_log('File error code: ' . $file['error']);
+        error_log('File type: ' . $file['type']);
+        error_log('File size: ' . $file['size']);
+        error_log('File name: ' . $file['name']);
+        error_log('File tmp_name: ' . $file['tmp_name']);
+
         // Controleer of er een bestand is geüpload
         if ($file['error'] !== UPLOAD_ERR_OK) {
+            error_log('1');
             return "Fout bij het uploaden van het bestand: " . $this->getUploadErrorMessage($file['error']);
         }
         
         // Controleer bestandstype
+        error_log('2');
         $allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
         
         if (!in_array($file['type'], $allowedTypes)) {
+            error_log('3');
             return "Alleen PDF en Word bestanden zijn toegestaan";
         }
         
         // Controleer bestandsgrootte (max 2MB)
+        error_log('4');
         $maxSize = 2 * 1024 * 1024; // 2MB
         if ($file['size'] > $maxSize) {
+            error_log('5');
             return "Bestandsgrootte mag maximaal 2MB zijn";
         }
         
@@ -92,17 +109,19 @@ class Sollicitatie {
         $fileName = time() . '_' . bin2hex(random_bytes(8)) . '_' . preg_replace('/[^A-Za-z0-9\-\.]/', '_', $file['name']);
         $uploadDir = __DIR__ . '/../../uploads/cv/';
         $targetPath = $uploadDir . $fileName;
-        
+        error_log('6');
         // Controleer of de map bestaat en maak deze aan indien nodig
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0755, true);
         }
         
         // Verplaats het bestand
+        error_log('7');
         if (!move_uploaded_file($file['tmp_name'], $targetPath)) {
+            error_log('8');
             return "Fout bij het opslaan van het bestand";
         }
-        
+        error_log('9');
         return 'uploads/cv/' . $fileName;
     }
     
