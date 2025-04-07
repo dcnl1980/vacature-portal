@@ -1,0 +1,21 @@
+# Git directory
+.git
+.gitignore
+
+# Docker bestanden
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Database en uploads (deze worden als volumes gemount)
+/data/*
+/uploads/*
+
+# OS bestanden
+.DS_Store
+Thumbs.db
+
+# IDE bestanden
+.idea
+.vscode
+*.sublime-* 

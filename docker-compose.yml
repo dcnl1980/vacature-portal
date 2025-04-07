@@ -1,0 +1,16 @@
+version: '3'
+
+services:
+  vacature-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vacature-portal
+    ports:
+      - "8080:80"
+    volumes:
+      - ./data:/var/www/html/data
+      - ./uploads:/var/www/html/uploads
+    environment:
+      - TZ=Europe/Amsterdam
+    restart: unless-stopped 
